@@ -26,8 +26,16 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
         // [변수] 감도 및 상태 저장
         // =================================================================
         private float _prevWristX = 0f;
-        public float _swipeThreshold = 0.005f;
-        private bool _isFistDetected = false;
+        public float _swipeHandSizeRatio = 0.08f;
+
+        // 2. 흔들기(Swipe) 관련 (System.DateTime 사용)
+        private long _lastSwipeTimeTicks = 0;    // 마지막 흔들기 시간 (Ticks 단위)
+        private long _swipeCooldownTicks = 5000000; // 0.5초 = 5,000,000 Ticks
+
+        // 3. 주먹(Fist) 관련 (System.DateTime 사용)
+        private long _fistEnterTimeTicks = 0;    // 주먹 쥐기 시작한 시간
+        private long _fistHoldThresholdTicks = 2000000; // 0.1초 = 1,000,000 Ticks
+        private bool _isFistState = false;
         // =================================================================
 
         public override void Stop()
@@ -135,9 +143,6 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
         {
             _handLandmarkerResultAnnotationController.DrawLater(result);
 
-            // =================================================================
-            // [통합 로직] 함수 호출 없이 여기서 바로 계산 (에러 원천 차단)
-            // =================================================================
             if (result.handLandmarks != null && result.handLandmarks.Count > 0)
             {
                 var firstHandWrapper = result.handLandmarks[0];
@@ -145,57 +150,106 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
                 if (firstHandWrapper.landmarks != null && firstHandWrapper.landmarks.Count > 0)
                 {
                     var landmarks = firstHandWrapper.landmarks;
-                    var wrist = landmarks[0]; // 손목
+                    var wrist = landmarks[0];
 
-                    // ---------------------------------------------------------
-                    // 1. 주먹 감지 (계산식 직접 입력)
-                    // Tip(끝)과 Wrist(손목) 거리 vs PIP(중간)와 Wrist(손목) 거리 비교
-                    // ---------------------------------------------------------
+                    long currentTicks = System.DateTime.Now.Ticks;
 
-                    // 검지 (Index: 8 vs 6)
+                    // ----------------------------------------------------------------
+                    // 1. 주먹 감지 (기능: 떨림 방지 Debounce 적용)
+                    // ----------------------------------------------------------------
+
+                    // (거리 계산 로직은 동일)
                     float distTip8 = (landmarks[8].x - wrist.x) * (landmarks[8].x - wrist.x) + (landmarks[8].y - wrist.y) * (landmarks[8].y - wrist.y);
                     float distPip6 = (landmarks[6].x - wrist.x) * (landmarks[6].x - wrist.x) + (landmarks[6].y - wrist.y) * (landmarks[6].y - wrist.y);
                     bool isIndexFolded = distTip8 < distPip6;
 
-                    // 중지 (Middle: 12 vs 10)
                     float distTip12 = (landmarks[12].x - wrist.x) * (landmarks[12].x - wrist.x) + (landmarks[12].y - wrist.y) * (landmarks[12].y - wrist.y);
                     float distPip10 = (landmarks[10].x - wrist.x) * (landmarks[10].x - wrist.x) + (landmarks[10].y - wrist.y) * (landmarks[10].y - wrist.y);
                     bool isMiddleFolded = distTip12 < distPip10;
 
-                    // 약지 (Ring: 16 vs 14)
                     float distTip16 = (landmarks[16].x - wrist.x) * (landmarks[16].x - wrist.x) + (landmarks[16].y - wrist.y) * (landmarks[16].y - wrist.y);
                     float distPip14 = (landmarks[14].x - wrist.x) * (landmarks[14].x - wrist.x) + (landmarks[14].y - wrist.y) * (landmarks[14].y - wrist.y);
                     bool isRingFolded = distTip16 < distPip14;
 
-                    // 소지 (Pinky: 20 vs 18)
                     float distTip20 = (landmarks[20].x - wrist.x) * (landmarks[20].x - wrist.x) + (landmarks[20].y - wrist.y) * (landmarks[20].y - wrist.y);
                     float distPip18 = (landmarks[18].x - wrist.x) * (landmarks[18].x - wrist.x) + (landmarks[18].y - wrist.y) * (landmarks[18].y - wrist.y);
                     bool isPinkyFolded = distTip20 < distPip18;
 
-                    // 네 손가락이 다 접히면 주먹(0)
-                    if (isIndexFolded && isMiddleFolded && isRingFolded && isPinkyFolded)
+                    // 현재 프레임 기준 주먹 여부
+                    bool isCurrentFist = isIndexFolded && isMiddleFolded && isRingFolded && isPinkyFolded;
+
+                    // [떨림 방지 로직 - 시간 비교 방식 변경]
+                    if (isCurrentFist)
                     {
-                        if (!_isFistDetected)
+                        // 주먹을 처음 쥐었다면 시작 시간 기록
+                        if (_fistEnterTimeTicks == 0)
                         {
-                            Debug.Log("0");
-                            _isFistDetected = true;
+                            _fistEnterTimeTicks = currentTicks;
+                        }
+
+                        // 현재 시간 - 시작 시간 > 0.1초(1,000,000 Ticks)
+                        if (currentTicks - _fistEnterTimeTicks > _fistHoldThresholdTicks)
+                        {
+                            if (!_isFistState)
+                            {
+                                Debug.Log("0 (주먹 확정)");
+                                _isFistState = true;
+                            }
                         }
                     }
                     else
                     {
-                        _isFistDetected = false;
+                        // 주먹을 펴면 시간 초기화
+                        _fistEnterTimeTicks = 0;
+
+                        if (_isFistState)
+                        {
+                            _isFistState = false;
+                            // Debug.Log("주먹 해제");
+                        }
                     }
 
-                    // ---------------------------------------------------------
-                    // 2. 흔들기 감지
-                    // ---------------------------------------------------------
-                    var currentWristX = landmarks[0].x;
+                    // ----------------------------------------------------------------
+                    // [중요] 차단 로직: 주먹 상태라면 스와이프 계산 안 함
+                    // ----------------------------------------------------------------
+                    var currentWristX = wrist.x;
+
+                    if (_isFistState)
+                    {
+                        // 주먹 쥔 채로 이동해도 위치는 계속 갱신해줘야
+                        // 주먹을 풀었을 때 스와이프로 오인식되지 않음.
+                        _prevWristX = currentWristX;
+                        return; // 여기서 함수 강제 종료!
+                    }
+
+
+                    // ----------------------------------------------------------------
+                    // 2. 흔들기 감지 (동적 감도 적용 Dynamic Threshold)
+                    // ----------------------------------------------------------------
+
+                    // A. 손 크기 측정 (손목(0) <-> 중지 뿌리(9))
+                    // Sqrt를 써서 실제 거리를 구합니다.
+                    float handSize = Mathf.Sqrt(
+                        (landmarks[9].x - wrist.x) * (landmarks[9].x - wrist.x) +
+                        (landmarks[9].y - wrist.y) * (landmarks[9].y - wrist.y)
+                    );
+
+                    // [수정 후] 비율대로 계산하되, 최소 0.08 (혹은 0.008) 밑으로는 내려가지 않게 방어
+                    // 만약 의도가 0.008이었다면 0.08f 자리에 0.008f를 넣으세요.
+                    float dynamicThreshold = Mathf.Max(handSize * _swipeHandSizeRatio, 0.0135f);
+
+                    // (디버깅용: 감도가 어떻게 변하는지 궁금하면 주석 풀고 확인)
+                    // Debug.Log($"손크기: {handSize:F4} / 감도: {dynamicThreshold:F4}");
+
                     float movement = currentWristX - _prevWristX;
 
-                    if (movement > _swipeThreshold)
+                    // C. 동적 감도와 비교
+                    if (movement > dynamicThreshold && (currentTicks - _lastSwipeTimeTicks > _swipeCooldownTicks))
                     {
-                        Debug.Log("1");
+                        Debug.Log($"1 (스와이프 성공 - 감도: {dynamicThreshold:F4})");
+                        _lastSwipeTimeTicks = currentTicks;
                     }
+
                     _prevWristX = currentWristX;
                 }
             }
