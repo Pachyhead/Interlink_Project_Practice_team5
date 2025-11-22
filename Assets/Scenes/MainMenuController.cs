@@ -16,7 +16,7 @@ public class MainMenuController : MonoBehaviour
     public void OnClickStart()
     {
         CreateSession();
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Story");
     }
 
     // 기록 버튼 연결 함수
