@@ -10,10 +10,6 @@ public class MainMenuController : MonoBehaviour
     void Start()
     {
         PlayerPrefs.SetInt("ClearedLevel", 1);
-        if(PlayerPrefs.HasKey("SessionId"))
-        {
-            PlayerPrefs.DeleteKey("SessionId");
-        }
         PlayerPrefs.Save();
     }
     // 게임 시작 버튼 연결 함수
@@ -111,14 +107,16 @@ public class MainMenuController : MonoBehaviour
                 {
                     while (reader.Read())
                     {
-                        newSessionId = reader.GetInt32(0) + 1;
-                        Debug.Log("session_id: " + newSessionId);
-                        PlayerPrefs.SetInt("SessionId", newSessionId);
-                        PlayerPrefs.Save();
+                        if (!reader.IsDBNull(0))
+                        {
+                            newSessionId = reader.GetInt32(0) + 1;
+                            Debug.Log("session_id: " + newSessionId);
+                            GlobalData.SessionId = newSessionId;
+                        }
                     }
                 }
-                cmd.CommandText = "INSERT INTO Record VALUES(" + newSessionId + ", null, null, null, null, null, null)";
-                //cmd.ExecuteNonQuery();
+                cmd.CommandText = "INSERT INTO Record VALUES(" + GlobalData.SessionId + ", null, null, null, null, null, null)";
+                cmd.ExecuteNonQuery();
                 Debug.Log("sql: " + cmd.CommandText);
                 cmd.Dispose();
             }

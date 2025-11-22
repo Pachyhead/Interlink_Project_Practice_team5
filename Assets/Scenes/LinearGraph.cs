@@ -5,6 +5,7 @@ using System;
 using System.Data;
 using Mono.Data.Sqlite;
 using System.Collections.Generic;
+using System.Linq;
 
 public class LinearGraph : MonoBehaviour
 {
@@ -46,26 +47,26 @@ public class LinearGraph : MonoBehaviour
 
 
         // load from db
-        float[] test = new float[3];
+        float[] recordData = new float[3];
         
         string sceneName = graphContainer.gameObject.name;
         if (sceneName == "Scenario1")
         {
-            test = LoadData(1);
+            recordData = LoadData(1);
         }
         else if (sceneName == "Scenario2")
         {
-            test = LoadData(2);
+            recordData = LoadData(2);
         }
         else if (sceneName == "Scenario3")
         {
-            test = LoadData(3);
+            recordData = LoadData(3);
         }
         else if (sceneName == "Total")
         {
-            test = LoadData();
+            recordData = LoadData();
         }
-        ShowGraph(test);
+        ShowGraph(recordData);
 
         //if (answerRates != null && answerRates.Length > 0)
         //    ShowGraph(answerRates);
@@ -257,20 +258,29 @@ public class LinearGraph : MonoBehaviour
 
         IDbCommand dbCommand = dbConnection.CreateCommand();
 
-        dbCommand.CommandText = "SELECT rate_stage_" + (2*sceneNum-1) + " FROM " + tablename + " ORDER BY session_id DESC LIMIT 3 OFFSET 1"; // get scenario rate(1 or 2 or 3) for latest 3 session
+        dbCommand.CommandText = "SELECT rate_stage_" + (2*sceneNum-1) + " FROM " + tablename + " ORDER BY session_id DESC LIMIT 3"; // get scenario rate(1 or 2 or 3) for latest 3 session
         Debug.Log(dbCommand.CommandText);
 
         IDataReader dataReader = dbCommand.ExecuteReader();
 
         while (dataReader.Read())
         {
-            float rateStage = dataReader.GetFloat(0);
-            rateList.Add(rateStage);
+            if (!dataReader.IsDBNull(0))
+            {
+                float rateStage = dataReader.GetFloat(0);
+                rateList.Add(rateStage);
+            }
+            else
+            {
+                Debug.Log("stage " + (2 * sceneNum - 1) + "'s data is empty");
+            }
         }
         dataReader.Close();
         dbConnection.Close();
-
-        rateList.Reverse();
+        if(rateList.Any())
+        {
+            rateList.Reverse();
+        }
 
         return rateList.ToArray();
     }
@@ -289,20 +299,30 @@ public class LinearGraph : MonoBehaviour
 
         IDbCommand dbCommand = dbConnection.CreateCommand();
 
-        dbCommand.CommandText = "SELECT rate_total FROM " + tablename + " ORDER BY session_id DESC LIMIT 3 OFFSET 1"; // get scenario rate(1 or 2 or 3) for latest 3 session
+        dbCommand.CommandText = "SELECT rate_total FROM " + tablename + " ORDER BY session_id DESC LIMIT 3"; // get scenario rate(1 or 2 or 3) for latest 3 session
         Debug.Log(dbCommand.CommandText);
 
         IDataReader dataReader = dbCommand.ExecuteReader();
 
         while (dataReader.Read())
         {
-            float rateStage = dataReader.GetFloat(0);
-            rateList.Add(rateStage);
+            if (!dataReader.IsDBNull(0))
+            {
+                float rateStage = dataReader.GetFloat(0);
+                rateList.Add(rateStage);
+            }
+            else
+            {
+                Debug.Log("total data is empty");
+            }
         }
         dataReader.Close();
         dbConnection.Close();
 
-        rateList.Reverse();
+        if (rateList.Any())
+        {
+            rateList.Reverse();
+        }
 
         return rateList.ToArray();
     }

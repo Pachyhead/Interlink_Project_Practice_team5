@@ -27,10 +27,13 @@ public class QuizDB
                 {
                     while (reader.Read())
                     {
-                        int id = reader.GetInt32(0);
-                        string q = reader.GetString(1);
-                        KeyValuePair<int, string> pair = new KeyValuePair<int, string>(id, q);
-                        questions.Add(pair);
+                        if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                        {
+                            int id = reader.GetInt32(0);
+                            string q = reader.GetString(1);
+                            KeyValuePair<int, string> pair = new KeyValuePair<int, string>(id, q);
+                            questions.Add(pair);
+                        }
                     }
                 }
             }

@@ -81,10 +81,13 @@ public class QuizManager : MonoBehaviour
                 {
                     while (reader.Read())
                     {
-                        string answer = reader.GetString(0);
-                        if (answer[0] == submitAnswer)
+                        if (!reader.IsDBNull(0))
                         {
-                            rst = true;
+                            string answer = reader.GetString(0);
+                            if (answer[0] == submitAnswer)
+                            {
+                                rst = true;
+                            }
                         }
                     }
                 }
@@ -111,8 +114,9 @@ public class QuizManager : MonoBehaviour
                 {
                     is_correct = "N";
                 }
-                cmd.CommandText = "INSERT INTO Log VALUES(" + PlayerPrefs.GetInt("SessionId") + ", " + q_id + ", " + is_correct + ")";
-                //cmd.ExecuteNonQuery();
+                //cmd.CommandText = "INSERT INTO Log VALUES(" + PlayerPrefs.GetInt("SessionId") + ", " + q_id + ", " + is_correct + ")";
+                cmd.CommandText = "INSERT INTO Log (session_id, question_id, is_correct) VALUES(" + GlobalData.SessionId + ", " + q_id + ", '" + is_correct + "')";
+                cmd.ExecuteNonQuery();
                 Debug.Log("sql: " + cmd.CommandText);
                 cmd.Dispose();
             }

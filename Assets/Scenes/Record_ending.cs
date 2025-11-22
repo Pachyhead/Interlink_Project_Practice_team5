@@ -111,8 +111,11 @@ public class ImageSwitcher : MonoBehaviour
 
         while (dataReader.Read())
         {
-            float rateSession = dataReader.GetFloat(0);
-            tempList.Add(rateSession);
+            if(!dataReader.IsDBNull(0))
+            {
+                float rateSession = dataReader.GetFloat(0);
+                tempList.Add(rateSession);
+            }
         }
 
         dataReader.Close();
