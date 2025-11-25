@@ -3,6 +3,7 @@
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
 .utmp/
+/.venv/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -97,3 +98,14 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+<<<<<<< HEAD
+
+# Model
+*.pt
+
+# API key
+Assets/StreamingAssets/gemini_api_key.txt
+Assets/StreamingAssets/gemini_api_key.txt.meta
+
+# MediaPipe folder
+/Packages/MediaPipeUnityPlugin-all/
