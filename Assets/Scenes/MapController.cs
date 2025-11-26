@@ -18,7 +18,6 @@ public class MapController : MonoBehaviour
     {
         // [수정] 테스트용 기본값 변경 (총 5개 노드이므로 최대값 5로 변경)
         unlockedStage = PlayerPrefs.GetInt("ClearedLevel", 5);
-
         // [기존 로직 유지]
         // 2. 캐릭터를 현재 해금된 가장 마지막 위치나 0번 위치에 둡니다.
         currentIndex = Mathf.Clamp(unlockedStage - 1, 0, stageNodes.Length - 1);

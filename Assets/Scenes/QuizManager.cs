@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class QuizManager : MonoBehaviour
 {
+    public int currentStageNumber = 1;
     [Header("UI References")]
     public GameObject resultButtonObj;
     public Image resultButtonImage;
@@ -56,7 +57,7 @@ public class QuizManager : MonoBehaviour
         else // 마지막 문제
         {
             Debug.Log("마지막 문제입니다.");
-            int nextStage = targetScenarioId + 1; // 스테이지 기록 저장
+            int nextStage = currentStageNumber + 1;
             if (nextStage > PlayerPrefs.GetInt("ClearedLevel"))
             {
                 PlayerPrefs.SetInt("ClearedLevel", nextStage);

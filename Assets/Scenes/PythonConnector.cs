@@ -79,7 +79,20 @@ public class PythonConnector : MonoBehaviour
             UnityEngine.Debug.LogError("오류: 연결된 웹캠을 찾을 수 없습니다!");
         }
     }
+    // [추가] 씬이 바뀌거나 게임이 꺼질 때 웹캠을 정리하는 함수
+    void OnDestroy()
+    {
+        if (webCamTexture != null)
+        {
+            // 1. 웹캠 정지
+            webCamTexture.Stop();
 
+            // 2. 변수 연결 해제 (확실하게 끊기 위해)
+            webCamTexture = null;
+
+            UnityEngine.Debug.Log("웹캠 자원 해제 완료");
+        }
+    }
     // [변경] 버튼 클릭 시 실행되는 캡처 로직
     public void CaptureAndAnalyze()
     {

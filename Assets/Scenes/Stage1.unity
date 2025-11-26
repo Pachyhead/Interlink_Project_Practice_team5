@@ -151,12 +151,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 729647869}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 404835653}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 982.7348, y: 535.90027}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 1.178, y: -127}
+  m_SizeDelta: {x: 519.9075, y: 425.8983}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &44193795
 MonoBehaviour:
@@ -526,6 +526,7 @@ RectTransform:
   - {fileID: 2112333279}
   - {fileID: 511261487}
   - {fileID: 2138836355}
+  - {fileID: 44193794}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2423,7 +2424,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnalysisScheduler
   timerText: {fileID: 2112333277}
-  analysisInterval: 5
+  analysisInterval: 1
 --- !u!4 &1598375661
 Transform:
   m_ObjectHideFlags: 0
@@ -2945,4 +2946,3 @@ SceneRoots:
   - {fileID: 703757139}
   - {fileID: 1132259070}
   - {fileID: 1598375661}
-  - {fileID: 44193794}

@@ -61,6 +61,12 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
             base.Stop();
             _textureFramePool?.Dispose();
             _textureFramePool = null;
+
+            if(ImageSourceProvider.ImageSource != null)
+            {
+                ImageSourceProvider.ImageSource.Stop();
+                Debug.Log("Mediapipe: 카메라 자원을 강제로 해제했습니다.");
+            }
         }
 
         protected override IEnumerator Run()
@@ -275,6 +281,11 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
                     _prevWristX = currentWristX;
                 }
             }
+        }
+        
+        private void OnDestroy()
+        {
+            Stop();
         }
     }
 }
